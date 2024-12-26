@@ -1,0 +1,13 @@
+{
+  "name": "avalanche-l1",
+  "devDependencies": {
+    "@nomicfoundation/hardhat-toolbox": "^5.0.0",
+    "dotenv": "^16.4.7",
+    "hardhat": "^2.22.17",
+    "yargs": "^17.7.2"
+  },
+  "dependencies": {
+    "@openzeppelin/contracts": "^5.1.0",
+    "erc721a": "^4.3.0"
+  }
+}
