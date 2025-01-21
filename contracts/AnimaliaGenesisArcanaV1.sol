@@ -3,23 +3,21 @@
 pragma solidity ^0.8.20;
 
 import "@openzeppelin/contracts/access/Ownable.sol";
-import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol";
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Royalty.sol";
 import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
-import "./ERC721MerkleClaim.sol";
+import "@openzeppelin/contracts/utils/cryptography/MerkleProof.sol";
+import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
-contract AnimaliaTitans is
+contract AnimaliaGenesisArcanaV1 is
     ERC721,
     ERC721Enumerable,
     ERC721Royalty,
-    ERC721MerkleClaim,
-    ReentrancyGuard,
-    Ownable
+    Ownable,
+    ReentrancyGuard
 {
     using SafeERC20 for IERC20;
-    using EnumerableMap for EnumerableMap.UintToAddressMap;
 
     uint256 private _nextTokenId;
 
@@ -27,7 +25,29 @@ contract AnimaliaTitans is
     string private _symbol;
     string private baseURI;
 
+    bytes32 public claimMerkleRoot;
+    bytes32 public mintMerkleRoot;
+
+    mapping(bytes32 mintMerkleRoot => mapping(address minter => uint256 count)) merkleMintCount;
+
+    uint8 public constant MAX_MINT_PER_BLOCK = 150;
+
+    modifier canMint(uint256 mintAmount) {
+        if (mintAmount <= 0) {
+            revert InvalidMintAmount(mintAmount);
+        }
+        if (mintAmount > MAX_MINT_PER_BLOCK) {
+            revert MintAmountExceedLimit(MAX_MINT_PER_BLOCK);
+        }
+        _;
+    }
+
     event Received(address, uint256);
+
+    error InvalidMintAmount(uint256 mintAmount);
+    error MintAmountExceedLimit(uint256 limit);
+    error TokenAlreadyMinted(uint256 tokenId);
+    error InvalidMerkleProof();
 
     constructor(
         string memory name_,
@@ -35,7 +55,7 @@ contract AnimaliaTitans is
         string memory baseURI_,
         address defaultRoyaltyReceiver,
         uint96 defaultRoyaltyFeeNumerator
-    ) ERC721(name_, symbol_) Ownable(_msgSender()) {
+    ) ERC721("", "") Ownable(_msgSender()) {
         _name = name_;
         _symbol = symbol_;
         baseURI = baseURI_;
@@ -98,36 +118,63 @@ contract AnimaliaTitans is
         _safeMint(to, tokenId);
     }
 
-    // owner mint tokenId
-    function mintTokenId(address to, uint256 tokenId) external onlyOwner {
-        _safeMint(to, tokenId);
-    }
-
-    // owner mint sequential
-    function mint(address to) external onlyOwner {
-        _mintToken(to);
-    }
-
-    // owner batch mint sequential
-    function mintBatch(address to, uint8 amount) external onlyOwner {
+    // owner batch mint
+    function mint(
+        address to,
+        uint8 amount
+    ) external nonReentrant onlyOwner canMint(amount) {
         for (uint8 i = 0; i < amount; i++) {
             _mintToken(to);
         }
     }
 
-    function claim(
+    // claim tokenId
+    function mint(
         bytes32[] calldata claimMerkleProof,
-        uint256 tokenId
-    ) external nonReentrant {
-        _merkleClaim(claimMerkleProof, tokenId);
+        uint256[] calldata tokenIds
+    ) external nonReentrant canMint(tokenIds.length) {
+        for (uint256 i = 0; i < tokenIds.length; i++) {
+            if (
+                !MerkleProof.verify(
+                    claimMerkleProof,
+                    claimMerkleRoot,
+                    keccak256(abi.encodePacked(_msgSender(), tokenIds[i]))
+                )
+            ) {
+                revert InvalidMerkleProof();
+            }
+
+            if (_ownerOf(tokenIds[i]) != address(0)) {
+                revert TokenAlreadyMinted(tokenIds[i]);
+            }
+
+            _safeMint(_msgSender(), tokenIds[i]);
+        }
     }
 
-    function claimBatch(
-        bytes32[] calldata proof,
-        bool[] calldata proofFlags,
-        uint256[] calldata tokenIds
-    ) external nonReentrant {
-        _merkleClaimBatch(proof, proofFlags, tokenIds);
+    // merkle mint
+    function mint(
+        bytes32[] calldata mintMerkleProof,
+        uint256 quota,
+        uint256 amount
+    ) external nonReentrant canMint(amount) {
+        if (
+            !MerkleProof.verify(
+                mintMerkleProof,
+                mintMerkleRoot,
+                keccak256(abi.encodePacked(_msgSender(), quota))
+            )
+        ) {
+            revert InvalidMerkleProof();
+        }
+
+        if (merkleMintCount[mintMerkleRoot][_msgSender()] + amount > quota) {
+            revert MintAmountExceedLimit(quota);
+        }
+
+        for (uint256 i = 0; i < amount; i++) {
+            _mintToken(_msgSender());
+        }
     }
 
     function recover(
@@ -137,12 +184,12 @@ contract AnimaliaTitans is
         Address.sendValue(payable(recipient), amount);
     }
 
-    function recover(
-        address tokenAddress,
+    function recoverERC20(
+        address tokenAddress_,
         uint256 amount,
         address recipient
     ) external onlyOwner {
-        IERC20(tokenAddress).safeTransfer(recipient, amount);
+        IERC20(tokenAddress_).safeTransfer(recipient, amount);
     }
 
     receive() external payable {

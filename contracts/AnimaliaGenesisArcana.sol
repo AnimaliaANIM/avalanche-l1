@@ -9,12 +9,14 @@ import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol";
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Royalty.sol";
 import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 import "./ERC721MerkleClaim.sol";
+import "./ERC721MerkleMintSequential.sol";
 
-contract AnimaliaTitans is
+contract AnimaliaGenesisArcana is
     ERC721,
     ERC721Enumerable,
     ERC721Royalty,
     ERC721MerkleClaim,
+    ERC721MerkleMintSequential,
     ReentrancyGuard,
     Ownable
 {
@@ -93,7 +95,11 @@ contract AnimaliaTitans is
         claimMerkleRoot = merkleRoot;
     }
 
-    function _mintToken(address to) internal {
+    function setMintMerkleRoot(bytes32 merkleRoot) external onlyOwner {
+        mintMerkleRoot = merkleRoot;
+    }
+
+    function _mintToken(address to) internal override {
         uint256 tokenId = ++_nextTokenId;
         _safeMint(to, tokenId);
     }
@@ -116,10 +122,10 @@ contract AnimaliaTitans is
     }
 
     function claim(
-        bytes32[] calldata claimMerkleProof,
+        bytes32[] calldata proof,
         uint256 tokenId
     ) external nonReentrant {
-        _merkleClaim(claimMerkleProof, tokenId);
+        _merkleClaim(proof, tokenId);
     }
 
     function claimBatch(
@@ -128,6 +134,14 @@ contract AnimaliaTitans is
         uint256[] calldata tokenIds
     ) external nonReentrant {
         _merkleClaimBatch(proof, proofFlags, tokenIds);
+    }
+
+    function mint(
+        bytes32[] calldata proof,
+        uint256 quota,
+        uint256 amount
+    ) external nonReentrant {
+        _merkleMint(proof, quota, amount);
     }
 
     function recover(
