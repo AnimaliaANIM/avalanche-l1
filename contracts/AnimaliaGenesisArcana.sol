@@ -180,12 +180,15 @@ contract AnimaliaGenesisArcana is
         address to,
         uint256 tokenId,
         address auth
-    ) internal override(ERC721, ERC721Enumerable) returns (address) {
-        address previousOwner = super._update(to, tokenId, auth);
+    )
+        internal
+        override(ERC721, ERC721Enumerable)
+        returns (address previousOwner)
+    {
+        previousOwner = super._update(to, tokenId, auth);
         if (totalSupply() > maxSupply) {
             revert MaxSupplyReached();
         }
-        return previousOwner;
     }
 
     function _increaseBalance(
