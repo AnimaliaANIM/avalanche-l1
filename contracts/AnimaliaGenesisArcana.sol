@@ -32,6 +32,8 @@ contract AnimaliaGenesisArcana is
 
     event Received(address, uint256);
 
+    error MaxSupplyReached();
+
     constructor(
         string memory name_,
         string memory symbol_,
@@ -179,7 +181,11 @@ contract AnimaliaGenesisArcana is
         uint256 tokenId,
         address auth
     ) internal override(ERC721, ERC721Enumerable) returns (address) {
-        return super._update(to, tokenId, auth);
+        address previousOwner = super._update(to, tokenId, auth);
+        if (totalSupply() > maxSupply) {
+            revert MaxSupplyReached();
+        }
+        return previousOwner;
     }
 
     function _increaseBalance(
