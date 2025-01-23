@@ -26,6 +26,7 @@ contract AnimaliaTitans is
     string private _name;
     string private _symbol;
     string private baseURI;
+    uint256 public maxSupply;
 
     event Received(address, uint256);
 
@@ -33,12 +34,16 @@ contract AnimaliaTitans is
         string memory name_,
         string memory symbol_,
         string memory baseURI_,
+        uint256 _maxSupply,
+        uint256 startSequentialTokenId,
         address defaultRoyaltyReceiver,
         uint96 defaultRoyaltyFeeNumerator
     ) ERC721(name_, symbol_) Ownable(_msgSender()) {
         _name = name_;
         _symbol = symbol_;
         baseURI = baseURI_;
+        maxSupply = _maxSupply;
+        _nextTokenId = startSequentialTokenId;
         _setDefaultRoyalty(defaultRoyaltyReceiver, defaultRoyaltyFeeNumerator);
     }
 
@@ -64,6 +69,10 @@ contract AnimaliaTitans is
 
     function setBaseURI(string memory baseURI_) external onlyOwner {
         baseURI = baseURI_;
+    }
+
+    function setMaxSupply(uint256 maxSupply_) external onlyOwner {
+        maxSupply = maxSupply_;
     }
 
     function setRoyaltyInfo(
@@ -94,7 +103,7 @@ contract AnimaliaTitans is
     }
 
     function _mintToken(address to) internal {
-        uint256 tokenId = ++_nextTokenId;
+        uint256 tokenId = _nextTokenId++;
         _safeMint(to, tokenId);
     }
 
