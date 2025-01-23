@@ -8,7 +8,7 @@ import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol";
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Royalty.sol";
 import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
-import "./ERC721MerkleClaim.sol";
+import "./ERC721/ERC721MerkleClaim.sol";
 
 contract AnimaliaTitans is
     ERC721,
