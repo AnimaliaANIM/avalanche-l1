@@ -30,8 +30,6 @@ contract AnimaliaGemstones is
     bytes32 public constant MINTER_ROLE = keccak256("MINTER_ROLE");
     bytes32 public constant OPERATOR_ROLE = keccak256("OPERATOR_ROLE");
 
-    event Received(address, uint256);
-
     error MaxSupplyReached();
 
     constructor(
@@ -122,7 +120,7 @@ contract AnimaliaGemstones is
     }
 
     // mint tokenId
-    function mintTokenId(
+    function mint(
         address to,
         uint256 tokenId
     ) external onlyRole(OPERATOR_ROLE) {
@@ -135,10 +133,7 @@ contract AnimaliaGemstones is
     }
 
     // batch mint sequential
-    function mintBatch(
-        address to,
-        uint8 amount
-    ) external onlyRole(MINTER_ROLE) {
+    function mint(address to, uint8 amount) external onlyRole(MINTER_ROLE) {
         for (uint8 i = 0; i < amount; i++) {
             _mintToken(to);
         }
@@ -153,22 +148,11 @@ contract AnimaliaGemstones is
     }
 
     function recover(
-        uint256 amount,
-        address recipient
-    ) external payable onlyRole(OPERATOR_ROLE) {
-        Address.sendValue(payable(recipient), amount);
-    }
-
-    function recover(
         address tokenAddress,
         uint256 amount,
         address recipient
     ) external onlyRole(OPERATOR_ROLE) {
         IERC20(tokenAddress).safeTransfer(recipient, amount);
-    }
-
-    receive() external payable {
-        emit Received(msg.sender, msg.value);
     }
 
     // The following functions are overrides required by Solidity.

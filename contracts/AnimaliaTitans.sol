@@ -28,8 +28,6 @@ contract AnimaliaTitans is
     string private baseURI;
     uint256 public maxSupply;
 
-    event Received(address, uint256);
-
     error MaxSupplyReached();
 
     constructor(
@@ -110,7 +108,7 @@ contract AnimaliaTitans is
     }
 
     // owner mint tokenId
-    function mintTokenId(address to, uint256 tokenId) external onlyOwner {
+    function mint(address to, uint256 tokenId) external onlyOwner {
         _safeMint(to, tokenId);
     }
 
@@ -120,7 +118,7 @@ contract AnimaliaTitans is
     }
 
     // owner batch mint sequential
-    function mintBatch(address to, uint8 amount) external onlyOwner {
+    function mint(address to, uint8 amount) external onlyOwner {
         for (uint8 i = 0; i < amount; i++) {
             _mintToken(to);
         }
@@ -133,7 +131,7 @@ contract AnimaliaTitans is
         _merkleClaim(claimMerkleProof, tokenId);
     }
 
-    function claimBatch(
+    function claim(
         bytes32[] calldata proof,
         bool[] calldata proofFlags,
         uint256[] calldata tokenIds
@@ -142,22 +140,11 @@ contract AnimaliaTitans is
     }
 
     function recover(
-        uint256 amount,
-        address recipient
-    ) external payable onlyOwner {
-        Address.sendValue(payable(recipient), amount);
-    }
-
-    function recover(
         address tokenAddress,
         uint256 amount,
         address recipient
     ) external onlyOwner {
         IERC20(tokenAddress).safeTransfer(recipient, amount);
-    }
-
-    receive() external payable {
-        emit Received(msg.sender, msg.value);
     }
 
     // The following functions are overrides required by Solidity.
