@@ -40,15 +40,16 @@ contract AnimaliaCardSkins is
 
     constructor(
         address royaltyReceiver,
-        uint96 royaltyFeeNumerator
-    ) ERC1155("") EIP712("AnimaliaCardSkins", "1") {
+        uint96 royaltyFeeNumerator,
+        string memory uri_
+    ) ERC1155(uri_) EIP712("AnimaliaCardSkins", "1") {
         _grantRole(DEFAULT_ADMIN_ROLE, _msgSender());
         _grantRole(OPERATOR_ROLE, _msgSender());
         _setDefaultRoyalty(royaltyReceiver, royaltyFeeNumerator);
     }
 
-    function setURI(string memory newuri) external onlyRole(OPERATOR_ROLE) {
-        _setURI(newuri);
+    function setURI(string memory uri_) external onlyRole(OPERATOR_ROLE) {
+        _setURI(uri_);
     }
 
     function setDefaultRoyalty(
