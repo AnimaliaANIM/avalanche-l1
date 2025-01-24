@@ -1,3 +1,3 @@
 export function getAnimPriceInUSD() {
-  return 382384059734747n
+  return 3823840597347470n
 }
