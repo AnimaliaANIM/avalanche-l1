@@ -5,6 +5,7 @@ import { add } from 'date-fns'
 import { getPurchaseSignature } from '../../utils/utils.cardPackSales'
 import { getAnimPriceInUSD } from '../../utils/animPrice'
 import { getOpenSignature, getRevealSignature, revealCardPack } from '../../utils/utils.cardPacks'
+import numeral from 'numeral'
 // import { HardhatNetworkHDAccountsConfig } from 'hardhat/types'
 
 type Card = {
@@ -71,10 +72,15 @@ const cards = Object.values(cardPacks).reduce((cards, cardPack) => {
 
     console.log('chainId', chainId)
     console.log('owner.address', owner.address)
-    console.log('balanceOf owner.address', ethers.formatEther(await provider.getBalance(owner.address)))
+    console.log('balanceOf owner.address', numeral(ethers.formatEther(await provider.getBalance(owner.address))).format('0,0'))
 
     if (!isLocalhost) {
       throw new Error('Not localhost')
+    }
+
+    for (const signer of signers) {
+      console.log()
+      console.log('balance', signer.address, numeral(ethers.formatEther(await provider.getBalance(signer.address))).format('0,0'))
     }
 
     const arcanaSC = await (
@@ -167,10 +173,10 @@ const cards = Object.values(cardPacks).reduce((cards, cardPack) => {
       // console.log('balanceOf', signer.address, await cardPacksSC.balanceOfBatch(cardPackIds.map(_ => signer.address), cardPackIds))
 
       const amounts = cardPackIds.map(() => BigInt(randomInt(0, 11)))
-      const salePrices = _cardPackSales.map(cps => getAnimPriceInUSD() * cps.salePriceInUSD / 1_000000n)
+      const salePrices = _cardPackSales.map(cps => cps.salePriceInUSD * ethers.parseEther('1') / 1_000000n * ethers.parseEther('1') / getAnimPriceInUSD())
       const deadline = Math.floor(add(new Date(), { seconds: 60 }).getTime() / 1000)
 
-      // console.log('salePrices', salePrices)
+      // console.log('salePrices', getAnimPriceInUSD(), salePrices)
 
       const { data: { signature } } = await getPurchaseSignature({
         signer: marketplace,
