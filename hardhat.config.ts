@@ -8,13 +8,25 @@ const config: HardhatUserConfig = {
       version: '0.8.28',
     }],
     overrides: {
-      'contracts/AnimaliaTitans.sol': {
+      'contracts/AnimaliaCardPacksV1.sol': {
         version: '0.8.24',
         settings: {
           optimizer: {
-            enabled: false,
+            enabled: true,
             runs: 200,
           },
+          viaIR: true,
+          evmVersion: 'paris',
+        },
+      },
+      'contracts/AnimaliaCardPacks.sol': {
+        version: '0.8.28',
+        settings: {
+          optimizer: {
+            enabled: true,
+            runs: 200,
+          },
+          viaIR: true,
           evmVersion: 'paris',
         },
       },

@@ -25,9 +25,11 @@ import { ethers } from 'hardhat'
     const name = 'Animalia Genesis Arcana'
     const symbol = 'ANIM GA'
     const baseURI = ''
+    const maxSupply = 2000
+    const startSequentialTokenId = 1
     const royaltyRecipient = owner.address
     const royaltyFee = 500
-    const arcanaSC = await factory.connect(owner).deploy(name, symbol, baseURI, royaltyRecipient, royaltyFee)
+    const arcanaSC = await factory.connect(owner).deploy(name, symbol, baseURI, maxSupply, startSequentialTokenId, royaltyRecipient, royaltyFee)
 
     console.log('arcanaSC deployed', await arcanaSC.getAddress())
 
